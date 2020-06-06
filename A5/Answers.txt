@@ -1,0 +1,35 @@
+Q1. The fields that were loaded are "subreddit" and "score". The average was computed in the following manner:
+	-> Firstly, a combiner like step is carried out to compute the partial average (HashAggregate) and then the overall average for the subreddit is calculated.  
+
+Q2. The following are the time taken for the respective scenarios:
+	a. MapReduce - 2m30s
+	b. Spark DataFrame with CPython - 1m15s
+	c. Spark RDDs with CPython - 2m35s
+	d. Spark DataFrame with PyPy - 1m14s
+	e. Spark RDDs with PyPy - 1m55s
+
+The difference(between CPython and PyPy executions) is visibly large for RDDs over DataFrame because DataFrame runs on Scala code which stores entities as binaries whereas RDDs are saved as python objects. Moreover, DataFrame is a betterment over RDD in the sense that they are not dedicated to handle garbage (in addition to their functionality) collection(unlike RDDs) and scale better with bigger data (real BIG DATA- thanks to Scala), etc. 
+
+Q3. The run time for wikipedia_popular_df.py are as follows:
+	
+	with broadcast:
+	---------------
+	real 1m33.200s
+	user 0m43.114s
+	sys 0m2.346s	
+	
+	without broadcast:
+	------------------
+	real 2m13.010s
+	user 0m43.872s
+	sys 0m2.60s
+
+As it can be seen, the time taken with broadcast performs (slightly in this case- by a minute) better than without broadcast(run on cluster).
+
+Q4. The execution plan for wikipedia code differs in the way the "JOIN" operation happens.
+That is, with broadcast it uses "broadcastHashJoin" on the other hand for without broadcast a "SortMergeJoin" is used. 
+
+Q5. I personally felt 'DataFrames+Python' methods to be easier to code with but I think the sql syntax version for the same shall produce a better readable code as 'SQL' query is more inline with how a human communicates in natural language.
+	
+
+	

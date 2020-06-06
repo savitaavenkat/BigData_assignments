@@ -1,0 +1,8 @@
+Q1. The difference seen was 3-4 seconds.
+
+Q2. When there is need to use RDD multiple times, then its advisable to cache it as then the data in RDD will be available in memory (by default). Thus, it would make the computation efficient and faster. But, when there is no such need , using cache is mere waste of processing time and speed.
+
+Q3. When you join a smaller data set and larger dataset together, its preferable to use broadcast join. Broadcast join will perform better for smaller datasets and hence preferred.
+
+Q4. For broadcast join the smaller RDD has to be transferred to all nodes. It means around 5000sssMB data to be transferred. If you add required communication with driver it means you have to move a comparable amount of data in a much more expensive way. A broadcasted data has to be collected first and only after that can be forwarded to all the workers.
+	

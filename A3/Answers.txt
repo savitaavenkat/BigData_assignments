@@ -1,0 +1,15 @@
+Q1.  The problem with wordcount-improved.py with wordcount-5 as input (before making partitions manually) is that the data in the input files - word count-5 are quite large(big enough, maybe) and not well split (the amount in data between files in the folder varied by quite a margin). Thus, when we tried to map it initially the program couldn’t handle it well and resulted in having more running time. Moreover, all the files are in compressed format (.gz) and not in .txt, which adds to the cost seen during execution. It takes time to unpack, map and shuffle data as well. Hence, after creating partitions (in line with number of executors we had restricted the program to use) the code performs better .
+
+Q2.  The fix (repartitioning RDD) applied to wordcount-improved.py code earlier doesn’t prove to be much of a help here as the input data (wordcount-3 files) are quite equally distributed in size and moreover each filesize is smaller than that of ones in word count-5 folder. Also, there more number of files here with not sufficient data to be called for each partition to handle, so portioning the RDD to hold slices will make it expensive compared to running it without repartioning(as it has to also perform shuffle operations).
+
+Q3. What we can do to improve  the wordcount-5 input is, that we can pre-process it using a map/reduce kind off program and place the split files (which will be in .txt) in partitions created as such and make use of that for any future computations to come.
+
+Q4. Good Range: 2 - 16
+
+Q5. As fas as I tested on my system I could find the following:
+Pypy c code: 5.533s
+Spark python 5.086s
+Non-spark 0.244s
+Non-spark C code: 0.055s	
+
+	

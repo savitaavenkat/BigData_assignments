@@ -1,0 +1,25 @@
+Q1. To modify the existing "WikipediaPopular.java" code to incorporate a change (output the corresponding page name alongside the maximum viewed count), all we need to do is create a "SomePairWritable.java" (that could take in a string/text:page_name, long:page_count as input types) just like our LongPairWritable.java; via which we were able to provide a pair of values as output from the mapper function to the reducer function in the previous WordCountImproved.java program- that we had written. By this, the mapper can essentially output a [key:TimeInHours, (count:long, page_name:string/text)] to the reducer, which can then reduce on the count value to find the maximum and output the corresponding page_name (most viewed) along with the maximum view count for the hour. 
+NOTE: [],()- I have used them interchangeably to create an understanding of what I want to convey, nothing more!
+
+Q2. The difference between map() and flatMap() functions are that: map() takes in one element of a RDD and produces exactly one output for it after applying a function defined by the user (i.e.), one:one ratio between input & output for all elements of a RDD. Whereas, a flatMap() will apply a business logic (a function) to all elements of RDD and can produce 0 or more outputs for it. So, flatMap() is more like the MapReduce mapper function as it takes an element as input (say, a line of a text file in the word count problem) and produces more than a single output for the same (a sequence of word,1 pairs).
+
+Q3. The difference between reduce() and reduceByKey() functions are that: reduce() is an action, which means its returns an output and not a new RDD and reduce() operates on objects (it does not operate on key-value pairs). Whereas, the reduceByKey() function operated on key-value pairs, like the output from a mapper function and produce a new RDD of key-value pairs (after applying the business logic defined by user to reduce). Moreover, the reduceByKey will reduce value based on the key. Hence, reduceByKey() is more like the reducer from the MapReduce, as it produces key-value pairs as output after a reduce operation and also, as it operates on a set of key-value pairs as inputs to it. Further, the reduceByKey() function reduces based on key value.
+
+Q4. My improved python implementation does have the code to handle multiple pages having the same maximum count (most viewed count for an hour), so it will display a concatenated string of file names (incase fo two, yes it will display both the file names separated by a comma) separated by a comma in-between them as output along with the maximum count.
+
+Code snippet:
+The following function will be invoked in wordcount = words_filtered.reduceByKey(find_max)	
+	
+	def find_max(v, v1):
+        if v[0] < v1[0]: # checks if the count of the second entity is greater than the first
+                return v1
+        elif v[0] > v1[0]: # checks if the count of the first entity is greater than the second
+                return v
+        elif v[0] == v1[0]: # checks if both the count's are equal
+                store = (v[0], v[1] + ' ,' + v1[1]) # to store all pages that have same max count
+                return store
+	 
+Thus reduceBykey() will reduce the (key, value) pair based on the maximum of count for each record and at the same time, when it finds a match in the count value it will concatenate the filenames together. This way we can find all pages that have the maximum view count in an hour.
+	
+
+	

@@ -1,0 +1,72 @@
+**********************************************|I did the following using VM- set it up on my local machine|*******************************************
+
+Q1. What happened to the HDFS file when one of the nodes it was stored on failed?
+
+Ans: I observed the following=> (yes, the replication is maintained- which can be observed after manually refreshing the web front end few times!)
+
+  a. File picked to cause failure:=> 
+
+    'File information - big-file-1'
+
+     Block ID: 1073741825
+
+     Block Pool ID: BP-848933221-192.168.7.100-1542267536923
+
+     Generation Stamp: 1001
+
+     Size: 16777216
+
+     Availability:
+
+     hadoop4
+     hadoop3
+     hadoop2
+
+
+  b. Reloaded hadoop2 and observed the following (after refreshing few times)=>
+      Live Nodes	3 (Decommissioned: 0, In Maintenance: 0)
+      Dead Nodes	1 (Decommissioned: 0, In Maintenance: 0)
+      Decommissioning Nodes	0
+      Entering Maintenance Nodes	0
+      Total Datanode Volume Failures	0 (0 B)
+      Number of Under-Replicated Blocks	16
+
+  c. The status of 'Under-Replicated' Blocks. Changes 0 after few refreshes done=>
+      Live Nodes	3 (Decommissioned: 0, In Maintenance: 0)
+      Dead Nodes	1 (Decommissioned: 0, In Maintenance: 0)
+      Decommissioning Nodes	0
+      Entering Maintenance Nodes	0
+      Total Datanode Volume Failures	0 (0 B)
+
+  d.  And, then all the files (in the HDFS system), including the file we observed are made sure to have '3' replicas with other available nodes (except hadoop2- as its considered as a dead node).
+
+---------------------------------------------------------------------------------------
+
+Q2. How did YARN/MapReduce behave when one of the compute nodes disappeared?
+
+Ans: YARN/MApReduce tried to create new executors if needed using other compute nodes that is available instead of the failed node.  Also, the files that got saved due to the pyspark process that was running got changed to disks of other nodes rather than the failed node, the reloaded node gets considered as a dead node until the Hadoop processes are manually started freshly again. 
+
+For, instance I observed the following:
+
+=> When I tried to reload hadoop3 which was used by the compute process, the executor(s) pertaining to hadoop3 got killed (they were removed) 
+
+=> and, exception was thrown in the pyspark console saying the executor failed as it stopped and gave the following warning exception on the spark console :- 
+   "2018-11-15 08:23:57 WARN  YarnSchedulerBackend$YarnSchedulerEndpoint:66 - Requesting driver to remove executor 2 for reason Container marked as failed: container_1542269188597_0001_01_000003 on        host: hadoop3. Exit status: -100. Diagnostics: Container released on a *lost* node
+2018-11-15 08:23:57 ERROR YarnScheduler:70 - Lost executor 2 on hadoop3: Container marked as failed: container_1542269188597_0001_01_000003 on host: hadoop3. Exit status: -100. Diagnostics: Container released on a *lost* node
+2018-11-15 08:23:57 WARN  TaskSetManager:66 - Lost task 98.0 in stage 1.0 (TID 198, hadoop3, executor 2): ExecutorLostFailure (executor 2 exited caused by one of the running tasks) Reason: Container marked as failed: container_1542269188597_0001_01_000003 on host: hadoop3. Exit status: -100. Diagnostics: Container released on a *lost* node".
+
+=> Also, I tried to increment the process duration (the count), in that case few new executors were added in place of the lost executors of the dead nodes.
+
+=> the MapReduce computation  still proceeds uninterrupted (with just a failure of one process- the failed executor process).
+
+-------------------------------------------------------------------------------------------
+
+Q3. Were there more things you'd like to try with this cluster, or anything you did try that you think should have been in this assignment?
+
+Ans: I tried out everything given in the assignment (the optional mention as well). 
+
+=> Additionally, I tried reloading more than one node, for instance simulated failure for hadoop1 and hadoop3-> observed what HDFS did- It was able to replicate only twice essentially and as a result of which 28 blocks were left pending (finally- as replication factor was 3) in 'under-replicated' blocks column.
+
+=> Also, we can try working with namenodes under Hadoop's "safe mode" to understand situations where sometimes we face the 'READ-ONLY' Name node error.
+
+

@@ -1,0 +1,37 @@
+Q1. When tried to Insert another row with the same primary key as an already existing row in the table, the new row inserted overwrites the previous row's respective column values in the table. 
+
+Q2. For the Unreliable keyspace, when we try to query under the following situations:
+
+	-> with replication factor 1 and one node down: 
+		Since the replication factor is 1, the data is replicated only once and hence when a node is down there is no other replica for the node that's available to provide the stored records (of that particular node). Thus, trying to query during the downtime of the node will return unsuccessful.
+
+	-> with replication factor 2 and one node down:
+		Since the replication factor is 2 here, even if a node is down- there is another (second) replica of the data (or at least partial data) that's available to source our queries. Thus, trying to query even when a node is down returns successful (in most cases).
+	
+  
+Q3. While all nodes up:
+	
+	Consistency level 1 behaviour: When the nodes are up & consistency level is 1- all works fine. Here, consider the assumed replication factor is 2 (given) and all nodes are up. Thus, the details are consistent to the level 1 for sure and so, queries are successful.
+	
+	Consistency level ALL behaviour: When the nodes are up & consistency level is ALL- everything works fine again. As the replication factor we have given is 2 and by explicitly mentioning consistency level as ALL, it expects two replicas to be available- which in case of the node uptime is possible.
+    
+    While one node down:
+
+	Consistency level 1 behaviour: When one node is down & consistency level is set to 1 - again things seem to work fine. As the replication factor is 2 (given) and all nodes except one are up, we still can have at least one possible replica.
+
+	Consistency level ALL behaviour: When one node is down & consistency level is set to ALL - things don't work. As the replication factor is set to 2 (given) and all nodes except one are up, which means consistency level ALL cannot be met (that's two replications not possible). But, some queries did work in this case too.
+	Got the following error ' NoHostAvailable: ('Unable to complete the operation against any hosts', {<Host: 199.60.17.178 datacenter1>: Unavailable('Error from server: code=1000 [Unavailable exception] message="Cannot achieve consistency level ALL" info={\'required'_replicas\': 2, \'alive_replicas\': 1, \'consistency\': \'ALL\'}',)}) '
+
+Q4. WHERE id=5 and WHERE id=1 returned successfully with consistency ALL when one of the nodes was down.
+   
+    Why was it be possible?? : May be because ids 1 and 5 are seen to be the first two entries of the table and hence, the values for these two rows are available in the existing single (1 node that's available) replica somewhere while the other rows- 2,3,4,6,7,9 are possibly cached/replicated in the node that is down. 
+
+Q5. The statement I used to create 'nasalogs' table in Cassandra was ->
+	 'CREATE TABLE nasalogs (   host TEXT,   datetime TIMESTAMP,   path TEXT,   bytes INT,  id UUID, PRIMARY KEY (host, id) );' .
+    
+    Primary Key chosen : host (hostname) and id (UUID).
+
+    And why I chose them? : I chose Hostname to be the first parameter of the compound primary key as its the unique identifier we use in our problem to group by the records of the table.  But, Hostname alone isn't unique for every row in the table. Hence, I used a uuid() generated UUID value as the second parameter to my compound primary key. 
+
+Q6. The command I used for querying sum of bytes from the table was- 'SELECT SUM(bytes) FROM nasalogs;'. 
+    While doing so I happened to get - 'OperationTimedOut: errors={'199.60.17.188': 'Client request timeout. See Session.execute[_async](timeout)'}, last_host=199.60.17.188'

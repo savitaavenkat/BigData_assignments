@@ -1,0 +1,44 @@
+Q1. What did you see in the execution plan for the “join in Spark” solution? Why was the execution so fast (and the memory usage so small)?
+
+Ans:	The execution plan shows that there is usage of PushedFilters which is applied to the 'order keys - list of orderkeys that are given as input'. The join ideally happens only on this, as spark 	follows lazy evaluation. So, according to the code, it starts to work on data frames only when the filter operation is called on it.
+	Thus, the join operation is faster as it is performed only few records (records which belong to the input orderkeys). And, the memory usage is small as the data frames are small in size due to 	the limited set of selected rows to be held (based on input order keys).
+
+Q2. The CREATE TABLE statement I used for the orders_parts table is as follows:
+
+	CREATE TABLE orders_parts (   orderkey int,   custkey int,   orderstatus text,   totalprice decimal,   orderdate date,   order_priority text,   clerk text,   	ship_priority int,   comment text, part_names set<text>,  PRIMARY KEY (orderkey));
+
+	Output:
+	------
+	cqlsh:savitaav> SELECT * FROM orders_parts;
+	
+ 	orderkey | clerk | comment | custkey | order_priority | orderdate | orderstatus | part_names | ship_priority | totalprice
+	----------+-------+---------+---------+----------------+-----------+-------------+------------+---------------+------------
+
+(0 rows)
+  
+Q3. The running times of the two "tpch_orders_*" programs on the "tpch2" data on the cluster are as follows:
+
+	Command given: time spark-submit --packages datastax:spark-cassandra-connector:2.3.1-s_2.11 tpch_orders_d**.py ... output-4366 2579142 2816486 586119 	441985 	2863331
+
+	
+	tpch_orders_df.py
+	-----------------
+	real	1m24.919s
+	user	1m6.124s
+	sys	0m4.560s
+	
+	tech_orders_denorm.py
+	---------------------
+	real	0m42.756s
+	user	0m29.152s
+	sys	0m1.940s
+	
+	
+
+Q4. The logic that one would have to implement to maintain the denormalized data (assuming that the orders table had the part_names column in the main data set) is that:
+	Inserting a new row (record) of data into the 'orders' table should be synced with the tables- 'lineitem' and 'parts'. So that when we denormalize for our problem, the data to fill int parts_column 	will be inline.
+	Secondly, an update operation in one table should be consistent across the other dependent tables.
+	Finally, a delete operation should be performed if and only if there exists a record/row of data with a unique key, which is common across all other related/dependent tables.
+
+	If these conditions are satisfied, then- our program which is anyway loading data from the table dataset (tpch dataset [order table]- which will undergo deletion, updating or insertion), will be 	intact when it denormalizes.
+
